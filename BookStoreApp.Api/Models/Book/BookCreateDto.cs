@@ -13,7 +13,7 @@ namespace BookStoreApp.Api.Models.Book
         public int Year { get; set; }
 
         [Required]
-        [StringLength(20)]
+        [StringLength(50)]
         public string Isbn { get; set; }
 
         [Required]
