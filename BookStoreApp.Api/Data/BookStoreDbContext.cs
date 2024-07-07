@@ -44,7 +44,7 @@ namespace BookStoreApp.Api.Data
 
                 entity.Property(e => e.Summary).HasMaxLength(250);
 
-                entity.Property(e => e.Image).HasMaxLength(50);
+                entity.Property(e => e.Image).HasMaxLength(250);
 
                 entity.Property(e => e.Price).HasColumnType("decimal(18, 2)");
 

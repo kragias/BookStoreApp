@@ -12,6 +12,7 @@ using BookStoreApp.Api.Models.Author;
 using AutoMapper.QueryableExtensions;
 using NuGet.Versioning;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace BookStoreApp.Api.Controllers
 {
@@ -22,11 +23,13 @@ namespace BookStoreApp.Api.Controllers
     {
         private readonly BookStoreDbContext _context;
         private readonly IMapper mapper;
+        private readonly IWebHostEnvironment webHostEnvironment;
 
-        public BooksController(BookStoreDbContext context, IMapper mapper)
+        public BooksController(BookStoreDbContext context, IMapper mapper, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
             this.mapper = mapper;
+            this.webHostEnvironment = webHostEnvironment;
         }
 
         // GET: api/Books
@@ -76,6 +79,18 @@ namespace BookStoreApp.Api.Controllers
                 return NotFound();
             }
 
+            if (string.IsNullOrEmpty(bookDto.ImageData) == false) //ean exoume kanei upload fotografia
+            {
+                bookDto.Image = CreateFile(bookDto.ImageData, bookDto.OriginalImageName);
+
+                var picName = Path.GetFileName(book.Image); //remove old image file. maybe in try after save
+                var path = $"{webHostEnvironment.WebRootPath}\\bookCoverImages\\{picName}";
+                if (System.IO.File.Exists(path))
+                {
+                    System.IO.File.Delete(path);    
+                }
+            }
+            
             mapper.Map(bookDto, book);
             _context.Entry(book).State = EntityState.Modified;
 
@@ -85,7 +100,7 @@ namespace BookStoreApp.Api.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!await BookExistsAsync(id))
+                if (! await BookExistsAsync(id))
                 {
                     return NotFound();
                 }
@@ -104,7 +119,9 @@ namespace BookStoreApp.Api.Controllers
         [Authorize(Roles = "Administrator")] //Allow only administrator for example
         public async Task<ActionResult<BookCreateDto>> PostBook(BookCreateDto bookDto)
         {
+            
             var book = mapper.Map<Book>(bookDto);
+            book.Image = CreateFile(bookDto.ImageData, bookDto.OriginalImageName);
             _context.Books.Add(book);
             await _context.SaveChangesAsync();
 
@@ -126,6 +143,23 @@ namespace BookStoreApp.Api.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        private string CreateFile(string imageBase64, string imageName)
+        {
+            var url = HttpContext.Request.Host.Value;
+            var ext = Path.GetExtension(imageName);
+            var fileName = $"{Guid.NewGuid()}{ext}";
+            
+            var path = $"{webHostEnvironment.WebRootPath}\\bookCoverImages\\{fileName}";
+
+            byte[] image = Convert.FromBase64String(imageBase64);
+
+            var fileStream = System.IO.File.Create(path);
+            fileStream.Write(image,0, image.Length);
+            fileStream.Close();
+
+            return $"https://{url}/bookCoverImages/{fileName}";
         }
 
         private async Task<bool> BookExistsAsync(int id)
