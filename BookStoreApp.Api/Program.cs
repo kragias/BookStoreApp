@@ -1,5 +1,7 @@
 using BookStoreApp.Api.Configurations;
 using BookStoreApp.Api.Data;
+using BookStoreApp.Api.Models.Book;
+using BookStoreApp.Api.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +19,9 @@ builder.Services.AddDbContext<BookStoreDbContext>(options => options.UseSqlServe
 builder.Services.AddIdentityCore<ApiUser>() // my user class which inherits from default user class (IdentityUser)
     .AddRoles<IdentityRole>() //what role tha user has
     .AddEntityFrameworkStores<BookStoreDbContext>(); //where users are stored (maybe we have differerent database
+
+builder.Services.AddScoped<IAuthorsRepository, AuthorsRepository>();
+builder.Services.AddScoped<IBooksRepository, BooksRepository>();
 
 builder.Services.AddAutoMapper(typeof(MapperConfig));
 
