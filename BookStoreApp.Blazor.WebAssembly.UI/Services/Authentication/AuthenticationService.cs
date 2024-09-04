@@ -5,30 +5,43 @@
     using BookStoreApp.Blazor.WebAssembly.UI.Services.Base;
     using Microsoft.AspNetCore.Components.Authorization;
 
-    public class AuthenticationService : IAuthenticationService
+    public class AuthenticationService : BaseHttpService, IAuthenticationService
     {
         private readonly IClient httpClient;
         private readonly ILocalStorageService localStorage;
         private readonly AuthenticationStateProvider authenticationStateProvider; //i inject the original AuthenticationStateProvider
 
         public AuthenticationService(IClient httpClient, ILocalStorageService localStorage, AuthenticationStateProvider authenticationStateProvider)
+            :base(httpClient, localStorage)
         {
             this.httpClient = httpClient;
             this.localStorage = localStorage;
             this.authenticationStateProvider = authenticationStateProvider;
         }
 
-        public async Task<bool> AuthenticateAsync(LoginUserDto loginModel)
+        public async Task<Response<AuthResponse>> AuthenticateAsync(LoginUserDto loginModel)
         {
-            var response = await httpClient.LoginAsync(loginModel);
+            Response<AuthResponse> response;
+            try
+            {
+                var result = await httpClient.LoginAsync(loginModel);
+                response = new Response<AuthResponse>
+                {
+                    Data = result,
+                    Success = true,
+                };
+                //Store Token
+                await localStorage.SetItemAsync("accessToken", result.Token);
 
-            //Store Token
-            await localStorage.SetItemAsync("accessToken", response.Token);
-
-            //Change auth state of app. I must cast to my custom ApiAuthenticationStateProvider type
-            await ((ApiAuthenticationStateProvider)authenticationStateProvider).LoggedIn();
-
-            return true;
+                //Change auth state of app. I must cast to my custom ApiAuthenticationStateProvider type
+                await ((ApiAuthenticationStateProvider)authenticationStateProvider).LoggedIn();
+            }
+            catch (ApiException exception)
+            { 
+             response = ConvertApiExceptions<AuthResponse>(exception);
+            }
+            
+            return response;
         }
 
         public async Task Logout()

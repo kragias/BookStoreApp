@@ -3,7 +3,7 @@
     using BookStoreApp.Blazor.WebAssembly.UI.Services.Base;
     public interface IAuthenticationService
     {
-        Task<bool> AuthenticateAsync(LoginUserDto loginModel);
+        Task<Response<AuthResponse>> AuthenticateAsync(LoginUserDto loginModel);
         public Task Logout();
     }
 }

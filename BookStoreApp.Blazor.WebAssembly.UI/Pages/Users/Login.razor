@@ -1,6 +1,4 @@
 ﻿@page "/users/login"
-@inject IAuthenticationService authService
-@inject NavigationManager NavManager
 
 <h3>Login</h3>
 
@@ -21,35 +19,12 @@
         </div>
         <br/>
         <button type="submit" class="btn btn-primary btn-block">Login</button>
-
-
     </EditForm>
 </div>
-    
 
-@code {
-    LoginUserDto LoginModel = new LoginUserDto();
-    String Msg = string.Empty;
-
-    public async Task HandleLogin()
-    {
-        try
-        {
-            var response =  await authService.AuthenticateAsync(LoginModel);
-            if (response)
-            {
-                NavManager.NavigateTo("/");
-            }
-            Msg = "Invalid Credentials, Please Tr Agian";
-        }
-        catch (ApiException ex)
-        {
-            if(ex.StatusCode >= 200 && ex.StatusCode <=299)
-            {
-                
-            }
-            Msg = ex.Response;
-
-         }
-    }
-}
+@*
+//auto den ipirxe. nomizw xreiazetai gia na fainetai to minima lathous
+*@
+<br />
+<h2> @message </h2>
+   
